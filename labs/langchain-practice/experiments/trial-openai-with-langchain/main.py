@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import argparse
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -13,6 +14,14 @@ langchain_project = os.getenv("LANGCHAIN_PROJECT")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Enable streaming output",    
+    )
+    args = parser.parse_args()
+
     model = ChatOpenAI(
         model="gpt-4o-mini",
         api_key=openai_api_key,
@@ -26,5 +35,9 @@ if __name__ == "__main__":
         HumanMessage(content="私の名前はわかりますか？"),
     ]
 
-    output = model.invoke(messages)
-    print(output.content)
+    if args.stream:
+        for chunk in model.stream(messages):
+            print(chunk.content, end="", flush=True)
+    else:
+        output = model.invoke(messages)
+        print(output.content)
